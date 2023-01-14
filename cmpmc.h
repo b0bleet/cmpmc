@@ -29,9 +29,9 @@ typedef struct {
   cacheline_pad_t pad3;
 } mpmc_bounded_queue_t;
 
-void init_mpmc_queue(mpmc_bounded_queue_t *q, size_t buf_size);
-void destroy_mpmc_queue(mpmc_bounded_queue_t *q);
-int mpmc_enqueue(mpmc_bounded_queue_t *q, void *const data);
-void *mpmc_dequeue(mpmc_bounded_queue_t *q);
+int cmpmc_init(mpmc_bounded_queue_t *q, size_t buf_size);
+void cmpmc_destroy(mpmc_bounded_queue_t *q);
+int cmpmc_enq(mpmc_bounded_queue_t *q, void *const data);
+void *cmpmc_deq(mpmc_bounded_queue_t *q);
 
 #endif

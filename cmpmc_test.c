@@ -24,12 +24,12 @@ void *threadfunc(void *ctx) {
 
   for (int iter = 0; iter != iter_count; ++iter) {
     for (size_t i = 0; i != batch_size; i += 1) {
-      while (mpmc_enqueue(q, &i) < 0) {
+      while (cmpmc_enq(q, &i) < 0) {
         sched_yield();
       }
     }
     for (size_t i = 0; i != batch_size; i += 1) {
-      while (mpmc_dequeue(q) == NULL) {
+      while (cmpmc_deq(q) == NULL) {
         sched_yield();
       }
     }
@@ -40,7 +40,7 @@ void *threadfunc(void *ctx) {
 
 int mpmc_thread_test() {
   mpmc_bounded_queue_t *q = malloc(sizeof(mpmc_bounded_queue_t));
-  init_mpmc_queue(q, 1024);
+  cmpmc_init(q, 1024);
 
   pthread_t thread[thread_count];
   for (int i = 0; i < thread_count; i++) {
@@ -61,7 +61,7 @@ int mpmc_thread_test() {
   printf("cycles/op=%ld\n",
          delta / (batch_size * iter_count * 2 * thread_count));
 
-  destroy_mpmc_queue(q);
+  cmpmc_destroy(q);
   free(q);
 
   return 0;

@@ -1,10 +1,11 @@
 #include <cmpmc.h>
 
-void init_mpmc_queue(mpmc_bounded_queue_t *q, size_t buf_size) {
+int cmpmc_init(mpmc_bounded_queue_t *q, size_t buf_size) {
   assert((buf_size >= 2) && ((buf_size & (buf_size - 1)) == 0));
 
   cell_t *alloc_buf = calloc(buf_size, sizeof(cell_t));
-  assert(alloc_buf != NULL);
+  if (alloc_buf == NULL)
+    return -1;
 
   memcpy((cell_t *)&q->buf, &alloc_buf, sizeof(cell_t *));
   *(size_t *)(&q->buf_mask) = (buf_size - 1);
@@ -14,14 +15,16 @@ void init_mpmc_queue(mpmc_bounded_queue_t *q, size_t buf_size) {
 
   atomic_store_explicit(&q->enqueue_pos, 0, memory_order_relaxed);
   atomic_store_explicit(&q->dequeue_pos, 0, memory_order_relaxed);
+  
+  return 0;
 }
 
-void destroy_mpmc_queue(mpmc_bounded_queue_t *q) {
+void cmpmc_destroy(mpmc_bounded_queue_t *q) {
   if (q->buf)
     free(q->buf);
 }
 
-int mpmc_enqueue(mpmc_bounded_queue_t *q, void *const data) {
+int cmpmc_enq(mpmc_bounded_queue_t *q, void *const data) {
   cell_t *cell;
   size_t pos = atomic_load_explicit(&q->enqueue_pos, memory_order_relaxed);
   for (;;) {
@@ -47,7 +50,7 @@ int mpmc_enqueue(mpmc_bounded_queue_t *q, void *const data) {
   return 0;
 }
 
-void *mpmc_dequeue(mpmc_bounded_queue_t *q) {
+void *cmpmc_deq(mpmc_bounded_queue_t *q) {
   cell_t *cell;
   void *data;
   size_t pos = atomic_load_explicit(&q->dequeue_pos, memory_order_relaxed);
