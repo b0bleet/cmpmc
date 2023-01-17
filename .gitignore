@@ -1,5 +1,5 @@
 queue
 *.o
 mpmc_queue.cc
-cmpmc
+cmpmc_test
 build

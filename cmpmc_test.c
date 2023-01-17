@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <cmpmc.h>
+#include <cmpmc_test.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <x86intrin.h>
@@ -34,13 +35,15 @@ void *threadfunc(void *ctx) {
       }
     }
   }
-
   return NULL;
 }
 
 int mpmc_thread_test() {
   mpmc_bounded_queue_t *q = malloc(sizeof(mpmc_bounded_queue_t));
-  cmpmc_init(q, 1024);
+  if (cmpmc_init(q, 1024) == -1) {
+    fprintf(stderr, "Error initializing memory\n");
+    return -1;
+  }
 
   pthread_t thread[thread_count];
   for (int i = 0; i < thread_count; i++) {
@@ -63,11 +66,29 @@ int mpmc_thread_test() {
 
   cmpmc_destroy(q);
   free(q);
+  return 0;
+}
 
+int mpmc_test() {
+  int d = 1337;
+  mpmc_bounded_queue_t *q = malloc(sizeof(mpmc_bounded_queue_t));
+  if (cmpmc_init(q, 1024) == -1) {
+    fprintf(stderr, "Error initializing memory\n");
+    return -1;
+  }
+
+  cmpmc_enq(q, &d);
+  int *expect = cmpmc_deq(q);
+  test_cond("simple mpmc_test with enq and deq operations", *expect == d);
+
+  cmpmc_destroy(q);
+  free(q);
   return 0;
 }
 
 int main(int argc, char *argv[]) {
   mpmc_thread_test();
+  mpmc_test();
+  test_report();
   return 0;
 }

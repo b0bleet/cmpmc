@@ -1,5 +1,5 @@
-TARGET = cmpmc
-LIBS = -lm -lpthread
+TARGET = cmpmc_test
+LIBS = -lm -lpthread -fsanitize=address
 CC = gcc
 CFLAGS = -g -Wall -std=c11
 

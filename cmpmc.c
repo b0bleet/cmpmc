@@ -6,8 +6,7 @@ int cmpmc_init(mpmc_bounded_queue_t *q, size_t buf_size) {
   cell_t *alloc_buf = calloc(buf_size, sizeof(cell_t));
   if (alloc_buf == NULL)
     return -1;
-
-  memcpy((cell_t *)&q->buf, &alloc_buf, sizeof(cell_t *));
+  *(cell_t **)&q->buf = alloc_buf;
   *(size_t *)(&q->buf_mask) = (buf_size - 1);
 
   for (size_t i = 0; i != buf_size; i += 1)
@@ -15,7 +14,6 @@ int cmpmc_init(mpmc_bounded_queue_t *q, size_t buf_size) {
 
   atomic_store_explicit(&q->enqueue_pos, 0, memory_order_relaxed);
   atomic_store_explicit(&q->dequeue_pos, 0, memory_order_relaxed);
-  
   return 0;
 }
 
@@ -46,7 +44,6 @@ int cmpmc_enq(mpmc_bounded_queue_t *q, void *const data) {
 
   cell->data = data;
   atomic_store_explicit(&cell->seq, pos + 1, memory_order_release);
-
   return 0;
 }
 
@@ -73,6 +70,5 @@ void *cmpmc_deq(mpmc_bounded_queue_t *q) {
   data = cell->data;
   atomic_store_explicit(&cell->seq, pos + q->buf_mask + 1,
                         memory_order_release);
-
   return data;
 }
